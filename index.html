@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Dog barking diary – 120 Combine Street, Coffs Harbour</title>
+<style>
+  :root {
+    --bg: #000000;
+    --card: #1C1C1E;
+    --line: #2C2C2E;
+    --text: #FFFFFF;
+    --muted: #8E8E93;
+    --blue: #0A84FF;
+    --green: #30D158;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 4px; }
+  h2 {
+    font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; margin: 36px 0 10px;
+  }
+  .ref { color: var(--muted); margin: 0 0 20px; }
+  .card { background: var(--card); border-radius: 14px; padding: 16px; }
+  p { margin: 0 0 12px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 0; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 18px; border-radius: 12px; border: 0;
+    font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+    flex: 1 1 200px;
+  }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-secondary { background: var(--card); color: var(--blue); }
+  .btn:focus-visible, .copy:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .label { color: var(--muted); font-size: 0.85rem; }
+  .copy {
+    background: none; border: 0; color: var(--blue); font: inherit; font-size: 0.9rem;
+    font-weight: 600; cursor: pointer; padding: 4px 0;
+  }
+  .copy.done { color: var(--green); }
+  .value {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; white-space: pre-wrap; word-break: break-word; font-size: 0.95rem;
+  }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .stat { background: var(--card); border-radius: 14px; padding: 14px 16px; }
+  .stat b { display: block; font-size: 1.6rem; color: var(--green); line-height: 1.2; }
+  .stat span { color: var(--muted); font-size: 0.85rem; }
+  .table-wrap { overflow-x: auto; background: var(--card); border-radius: 14px; margin-top: 10px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; }
+  .empty { color: var(--muted); padding: 20px 16px; text-align: center; }
+  footer { color: var(--muted); font-size: 0.85rem; margin-top: 28px; }
+  @media (max-width: 520px) {
+    th, td { padding: 9px 5px; font-size: 0.82rem; }
+    th:first-child, td:first-child { padding-left: 12px; }
+    th:last-child, td:last-child { padding-right: 12px; }
+    #statRangeCard { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Dog barking diary — 120 Combine Street, Coffs Harbour</h1>
+  <p class="ref">Council ref 02503/27CR</p>
+
+  <div class="card">
+    <p>This diary is recorded automatically and updates within minutes of each barking episode. Each entry shows when the barking started and stopped, how long it lasted and how many barks were counted.</p>
+    <p style="margin:0">To report it, use <strong>Email the council</strong> below, or copy the email text into your own mail app. The full diary can be downloaded as a spreadsheet (CSV).</p>
+  </div>
+
+  <div class="actions">
+    <a class="btn btn-primary" id="mailto" href="#">Email the council</a>
+    <a class="btn btn-secondary" href="bark-diary.csv" download="bark-diary.csv">Download CSV</a>
+  </div>
+
+  <h2>Email text</h2>
+  <div class="card">
+    <div class="field">
+      <div class="field-head"><span class="label">To</span><button class="copy" data-target="emailTo">Copy</button></div>
+      <div class="value" id="emailTo"></div>
+    </div>
+    <div class="field">
+      <div class="field-head"><span class="label">Subject</span><button class="copy" data-target="emailSubject">Copy</button></div>
+      <div class="value" id="emailSubject"></div>
+    </div>
+    <div class="field">
+      <div class="field-head"><span class="label">Message</span><button class="copy" data-target="emailBody">Copy</button></div>
+      <div class="value" id="emailBody">Loading…</div>
+    </div>
+  </div>
+
+  <h2>Diary</h2>
+  <div class="stats" id="stats" hidden>
+    <div class="stat"><b id="statEpisodes">0</b><span>barking episodes</span></div>
+    <div class="stat"><b id="statBarks">0</b><span>barks counted</span></div>
+    <div class="stat" id="statRangeCard"><b id="statRange">—</b><span>period covered</span></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Start</th><th>End</th><th class="num">Length</th><th class="num">Barks</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <footer>An episode starts at the first bark and continues while barks are less than 3 minutes apart; it ends 3 minutes after the last bark.</footer>
+</main>
+
+<script>
+  const TO = ["kyle.ketchell@chcc.nsw.gov.au", "coffs.council@chcc.nsw.gov.au"];
+  const SUBJECT = "02503/27CR - 120 Combine Street Coffs Harbour dog barking complaint";
+  const CSV_URL = "https://lukedav.github.io/bark-diary/bark-diary.csv";
+
+  // CSV dates look like "Oct 27 2026"; show them the Australian way, "27 Oct 2026".
+  function niceDate(csvDate) {
+    const [month, day, year] = csvDate.split(" ");
+    return day && year ? `${day} ${month} ${year}` : csvDate;
+  }
+
+  function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
+
+  function parseCsv(text) {
+    return text.trim().split(/\r?\n/).slice(1)
+      .map(line => line.split(","))
+      .filter(f => f.length === 5)
+      .map(([date, start, end, duration, barks]) => ({ date, start, end, duration, barks: Number(barks) || 0 }));
+  }
+
+  function buildBody(episodes) {
+    let summary;
+    if (episodes.length === 0) {
+      summary = "No barking episodes have been recorded yet.";
+    } else {
+      // Rows are newest first.
+      const first = niceDate(episodes[episodes.length - 1].date);
+      const last = niceDate(episodes[0].date);
+      const range = first === last ? `on ${first}` : `between ${first} and ${last}`;
+      const barks = episodes.reduce((sum, e) => sum + e.barks, 0);
+      summary = `As of today it shows:\n- ${plural(episodes.length, "barking episode", "barking episodes")} ${range}\n- ${plural(barks, "bark", "barks")} in total`;
+    }
+    return [
+      "Dear Ranger Ketchell,",
+      "",
+      "I'm writing about the ongoing dog barking at 120 Combine Street, Coffs Harbour (complaint ref 02503/27CR).",
+      "",
+      `The barking is being logged as it happens and the diary is kept up to date. ${summary}`,
+      "",
+      "Please find the full log — with the date, start and end time, duration and number of barks for each episode — at the link below:",
+      CSV_URL,
+      "",
+      "The barking is continuing to have a real impact on people living nearby. I'd appreciate it if Council could review the log and let me know what the next steps will be.",
+      "",
+      "Kind regards,",
+      ""
+    ].join("\n");
+  }
+
+  function render(episodes) {
+    const body = buildBody(episodes);
+    document.getElementById("emailTo").textContent = TO.join(", ");
+    document.getElementById("emailSubject").textContent = SUBJECT;
+    document.getElementById("emailBody").textContent = body;
+    document.getElementById("mailto").href =
+      `mailto:${TO.join(",")}?subject=${encodeURIComponent(SUBJECT)}&body=${encodeURIComponent(body.replace(/\n/g, "\r\n"))}`;
+
+    const rows = document.getElementById("rows");
+    rows.replaceChildren();
+    if (episodes.length === 0) {
+      rows.innerHTML = '<tr><td colspan="5" class="empty">No barking episodes recorded yet.</td></tr>';
+      return;
+    }
+    for (const e of episodes) {
+      const tr = document.createElement("tr");
+      [niceDate(e.date), e.start, e.end, e.duration, String(e.barks)].forEach((value, i) => {
+        const td = document.createElement("td");
+        td.textContent = value;
+        if (i >= 3) td.className = "num";
+        tr.appendChild(td);
+      });
+      rows.appendChild(tr);
+    }
+    const first = niceDate(episodes[episodes.length - 1].date);
+    const last = niceDate(episodes[0].date);
+    document.getElementById("statEpisodes").textContent = episodes.length;
+    document.getElementById("statBarks").textContent = episodes.reduce((s, e) => s + e.barks, 0);
+    document.getElementById("statRange").textContent = first === last ? first : `${first} – ${last}`;
+    document.getElementById("statRange").style.fontSize = "1.05rem";
+    document.getElementById("stats").hidden = false;
+  }
+
+  document.querySelectorAll(".copy").forEach(button => {
+    button.addEventListener("click", async () => {
+      const text = document.getElementById(button.dataset.target).textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(document.getElementById(button.dataset.target));
+        const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        document.execCommand("copy");
+      }
+      button.textContent = "Copied";
+      button.classList.add("done");
+      setTimeout(() => { button.textContent = "Copy"; button.classList.remove("done"); }, 1500);
+    });
+  });
+
+  // Cache-bust: GitHub Pages caches files for up to 10 minutes.
+  fetch(`bark-diary.csv?t=${Date.now()}`, { cache: "no-store" })
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(text => render(parseCsv(text)))
+    .catch(() => {
+      render([]);
+      document.getElementById("rows").innerHTML =
+        '<tr><td colspan="5" class="empty">The diary couldn\'t be loaded. Please refresh, or use Download CSV.</td></tr>';
+    });
+</script>
+</body>
+</html>
