@@ -350,6 +350,7 @@
         </button>
         <a
           class="btn btn-secondary"
+          id="downloadCsv"
           href="bark-diary.csv"
           download="bark-diary.csv"
           >Download CSV</a
@@ -734,10 +735,8 @@
         if (!el) return;
 
         gtag("event", "actions_click", {
-          element_type: el.tagName.toLowerCase(), // 'a' or 'button'
-          element_text: el.textContent.trim().slice(0, 100),
-          element_id: el.id || undefined,
-          link_url: el.href || undefined,
+          action_id: el.id, // mailto | copyAll | downloadCsv
+          element_type: el.tagName.toLowerCase(),
         });
       });
     </script>
