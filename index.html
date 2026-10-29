@@ -55,6 +55,7 @@
     background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
     padding: 10px 12px; white-space: pre-wrap; word-break: break-word; font-size: 0.95rem;
   }
+  #emailBody { max-height: 22rem; overflow-y: auto; }
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
   .stat { background: var(--card); border-radius: 14px; padding: 14px 16px; }
   .stat b { display: block; font-size: 1.6rem; color: var(--green); line-height: 1.2; }
@@ -91,7 +92,7 @@
 
   <div class="card">
     <p>This diary is recorded automatically and updates within minutes of each barking episode. Each entry shows when the barking started and stopped, how long it lasted and how many barks were counted.</p>
-    <p style="margin:0">To report it, use <strong>Email the council</strong> below, or copy the email text into your own mail app. The full diary can be downloaded as a spreadsheet (CSV).</p>
+    <p style="margin:0">To report it, use <strong>Email the council</strong> below, or copy the email text (which includes the last 2 weeks of episodes) into your own mail app. The full diary can be downloaded as a spreadsheet (CSV).</p>
   </div>
 
   <div class="actions">
@@ -193,7 +194,27 @@
       .map(([date, start, end, duration, barks]) => ({ date, start, end, duration, barks: Number(barks) || 0 }));
   }
 
-  function buildBody(episodes) {
+  // Plain text, grouped by day, so it reads the same in any mail client (no columns to misalign).
+  function buildList(episodes) {
+    const byDay = new Map();
+    for (const e of episodes) {
+      const day = niceDate(e.date);
+      if (!byDay.has(day)) byDay.set(day, []);
+      byDay.get(day).push(e);
+    }
+    const lines = [];
+    for (const [day, list] of byDay) {
+      const barks = list.reduce((sum, e) => sum + e.barks, 0);
+      lines.push(`${day} - ${plural(list.length, "episode", "episodes")}, ${plural(barks, "bark", "barks")}`);
+      for (const e of list) {
+        lines.push(`  ${e.start} to ${e.end} (${e.duration}, ${plural(e.barks, "bark", "barks")})`);
+      }
+      lines.push("");
+    }
+    return lines.join("\n");
+  }
+
+  function buildBody(episodes, withList) {
     // Only the last two weeks go in the email; the link below carries the full diary.
     const { start, end } = periodBounds(0);
     const window = `${dayLabel(start)} to ${dayLabel(end)}`;
@@ -211,7 +232,8 @@
       "",
       `The barking is being logged as it happens and the diary is kept up to date. ${summary}`,
       "",
-      "Please find the full log — with the date, start and end time, duration and number of barks for each episode, including earlier weeks — at the link below:",
+      ...(withList && episodes.length ? ["The episodes for this period, newest first:", "", buildList(episodes)] : []),
+      "The full log, including earlier weeks, is available at the link below:",
       CSV_URL,
       "",
       "The barking is continuing to have a real impact on people living nearby. I'd appreciate it if Council could review the log and let me know what the next steps will be.",
@@ -225,10 +247,12 @@
   let page = 0;
 
   function renderEmail() {
-    const body = buildBody(inPeriod(allEpisodes, 0));
+    const recent = inPeriod(allEpisodes, 0);
     document.getElementById("emailTo").textContent = TO.join(", ");
     document.getElementById("emailSubject").textContent = SUBJECT;
-    document.getElementById("emailBody").textContent = body;
+    document.getElementById("emailBody").textContent = buildBody(recent, true);
+    // mailto: links break past ~2000 characters in some clients, so the link carries the summary only.
+    const body = buildBody(recent, false);
     document.getElementById("mailto").href =
       `mailto:${TO.join(",")}?subject=${encodeURIComponent(SUBJECT)}&body=${encodeURIComponent(body.replace(/\n/g, "\r\n"))}`;
   }
