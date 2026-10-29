@@ -67,17 +67,6 @@
   th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
   tr:last-child td { border-bottom: 0; }
   td.num, th.num { text-align: right; }
-  .hint { color: var(--muted); font-size: 0.85rem; margin: 10px 0 0; }
-  /* One row per day; tap it to show that day's episodes underneath. */
-  tr.day { cursor: pointer; font-weight: 600; }
-  tr.day td:first-child::before {
-    content: "▸"; display: inline-block; width: 1em; color: var(--blue); transition: transform 0.15s;
-  }
-  tr.day.open td:first-child::before { transform: rotate(90deg); }
-  tr.day:hover td { background: rgba(255, 255, 255, 0.04); }
-  tr.ep { display: none; color: var(--muted); }
-  tr.ep td:first-child { padding-left: 2.3em; }
-  tr.ep.show { display: table-row; }
   .pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0; }
   .pager .period { text-align: center; font-weight: 600; flex: 1 1 auto; }
   .pager .period small { display: block; color: var(--muted); font-weight: 400; font-size: 0.8rem; }
@@ -93,7 +82,6 @@
     th, td { padding: 9px 5px; font-size: 0.82rem; }
     th:first-child, td:first-child { padding-left: 12px; }
     th:last-child, td:last-child { padding-right: 12px; }
-    tr.ep td:first-child { padding-left: 2em; }
     #statRangeCard { grid-column: 1 / -1; }
   }
   /* Printed on paper: black on white, every episode shown, no buttons. */
@@ -101,14 +89,11 @@
     :root { color-scheme: light; }
     body { background: #fff; color: #000; font-size: 11pt; }
     main { max-width: none; padding: 0; }
-    .ref, .label, .stat span, footer, th, .hint, tr.ep { color: #444; }
+    .ref, .label, .stat span, footer, th { color: #444; }
     .card, .stat, .table-wrap { background: none; border: 1px solid #bbb; border-radius: 6px; }
     .stat b { color: #000; }
     th, td { border-bottom: 1px solid #ddd; padding: 5px 8px; }
-    .actions, .email, .pager, .hint, .howto { display: none !important; }
-    tr.ep { display: table-row !important; }
-    tr.day td:first-child::before { content: ""; width: 0; }
-    tr.day:hover td { background: none; }
+    .actions, .email, .pager, .howto { display: none !important; }
     .print-only { display: block !important; }
   }
   .print-only { display: none; color: var(--muted); font-size: 0.85rem; margin: 6px 0 14px; }
@@ -162,11 +147,10 @@
   </div>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Date</th><th>First</th><th>Last</th><th class="num">Length</th><th class="num">Barks</th></tr></thead>
+      <thead><tr><th>Date</th><th>Start</th><th>End</th><th class="num">Length</th><th class="num">Barks</th></tr></thead>
       <tbody id="rows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
-  <p class="hint">Tap a day to see each episode. The Length column is the total time barking that day.</p>
   <div class="pager" id="pagerBottom">
     <button type="button" data-dir="1">&larr; Older</button>
     <div class="period" id="periodBottom"></div>
@@ -220,14 +204,6 @@
   }
 
   function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
-
-  function minutes(duration) { return parseInt(duration, 10) || 0; }
-
-  function niceMinutes(total) {
-    if (total < 60) return `${total} min`;
-    const h = Math.floor(total / 60), m = total % 60;
-    return m ? `${h} hr ${m} min` : `${h} hr`;
-  }
 
   function parseCsv(text) {
     return text.trim().split(/\r?\n/).slice(1)
@@ -336,27 +312,10 @@
     if (episodes.length === 0) {
       rows.innerHTML = '<tr><td colspan="5" class="empty">No barking episodes recorded in this period.</td></tr>';
     }
-    for (const [day, list] of groupByDay(episodes)) {
+    for (const e of episodes) {
       const tr = document.createElement("tr");
-      tr.className = "day";
-      const barks = list.reduce((s, e) => s + e.barks, 0);
-      const mins = list.reduce((s, e) => s + minutes(e.duration), 0);
-      // Newest first, so the first bark of the day is the last episode's start.
-      [day, list[list.length - 1].start, list[0].end, niceMinutes(mins), String(barks)].forEach((v, i) => cell(tr, v, i));
-      tr.setAttribute("aria-expanded", "false");
+      [niceDate(e.date), e.start, e.end, e.duration, String(e.barks)].forEach((v, i) => cell(tr, v, i));
       rows.appendChild(tr);
-      const eps = list.map(e => {
-        const row = document.createElement("tr");
-        row.className = "ep";
-        ["", e.start, e.end, e.duration, String(e.barks)].forEach((v, i) => cell(row, v, i));
-        rows.appendChild(row);
-        return row;
-      });
-      tr.addEventListener("click", () => {
-        const open = tr.classList.toggle("open");
-        tr.setAttribute("aria-expanded", String(open));
-        eps.forEach(r => r.classList.toggle("show", open));
-      });
     }
     document.getElementById("statEpisodes").textContent = episodes.length;
     document.getElementById("statBarks").textContent = episodes.reduce((s, e) => s + e.barks, 0);
