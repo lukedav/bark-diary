@@ -92,7 +92,7 @@
 
   <div class="card">
     <p>This diary is recorded automatically and updates within minutes of each barking episode. Each entry shows when the barking started and stopped, how long it lasted and how many barks were counted.</p>
-    <p style="margin:0">To report it, use <strong>Email the council</strong> below, or copy the email text (which includes the last 2 weeks of episodes) into your own mail app. The full diary can be downloaded as a spreadsheet (CSV).</p>
+    <p style="margin:0">To report it, use <strong>Email the council</strong> below, or copy the email text into your own mail app (use this if the button doesn&rsquo;t open a complete email). Both include the last 2 weeks of episodes. The full diary can be downloaded as a spreadsheet (CSV).</p>
   </div>
 
   <div class="actions">
@@ -250,9 +250,8 @@
     const recent = inPeriod(allEpisodes, 0);
     document.getElementById("emailTo").textContent = TO.join(", ");
     document.getElementById("emailSubject").textContent = SUBJECT;
-    document.getElementById("emailBody").textContent = buildBody(recent, true);
-    // mailto: links break past ~2000 characters in some clients, so the link carries the summary only.
-    const body = buildBody(recent, false);
+    const body = buildBody(recent, true);
+    document.getElementById("emailBody").textContent = body;
     document.getElementById("mailto").href =
       `mailto:${TO.join(",")}?subject=${encodeURIComponent(SUBJECT)}&body=${encodeURIComponent(body.replace(/\n/g, "\r\n"))}`;
   }
