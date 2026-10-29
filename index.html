@@ -1,385 +1,732 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
-<title>Dog barking diary – Combine Street, Coffs Harbour</title>
-<style>
-  :root {
-    --bg: #000000;
-    --card: #1C1C1E;
-    --line: #2C2C2E;
-    --text: #FFFFFF;
-    --muted: #8E8E93;
-    --blue: #0A84FF;
-    --green: #30D158;
-    color-scheme: dark;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
-  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
-  h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 4px; }
-  h2 {
-    font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--muted); font-weight: 600; margin: 36px 0 10px;
-  }
-  .ref { color: var(--muted); margin: 0 0 20px; }
-  .card { background: var(--card); border-radius: 14px; padding: 16px; }
-  p { margin: 0 0 12px; }
-  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 0; }
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 12px 18px; border-radius: 12px; border: 0;
-    font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
-    flex: 1 1 200px;
-  }
-  .btn-primary { background: var(--blue); color: #fff; }
-  .btn-secondary { background: var(--card); color: var(--blue); }
-  .btn.done { color: var(--green); }
-  .btn:focus-visible, .copy:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-  .field { margin-bottom: 14px; }
-  .field:last-child { margin-bottom: 0; }
-  .field-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .label { color: var(--muted); font-size: 0.85rem; }
-  .copy {
-    background: none; border: 0; color: var(--blue); font: inherit; font-size: 0.9rem;
-    font-weight: 600; cursor: pointer; padding: 4px 0;
-  }
-  .copy.done { color: var(--green); }
-  .value {
-    background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
-    padding: 10px 12px; white-space: pre-wrap; word-break: break-word; font-size: 0.95rem;
-  }
-  #emailBody { max-height: 22rem; overflow-y: auto; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-  .stat { background: var(--card); border-radius: 14px; padding: 14px 16px; }
-  .stat b { display: block; font-size: 1.6rem; color: var(--green); line-height: 1.2; }
-  .stat span { color: var(--muted); font-size: 0.85rem; }
-  .table-wrap { overflow-x: auto; background: var(--card); border-radius: 14px; margin-top: 10px; }
-  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
-  tr:last-child td { border-bottom: 0; }
-  td.num, th.num { text-align: right; }
-  .pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0; }
-  .pager .period { text-align: center; font-weight: 600; flex: 1 1 auto; }
-  .pager .period small { display: block; color: var(--muted); font-weight: 400; font-size: 0.8rem; }
-  .pager button {
-    background: var(--card); color: var(--blue); border: 0; border-radius: 10px;
-    font: inherit; font-weight: 600; padding: 9px 14px; cursor: pointer;
-  }
-  .pager button:disabled { color: var(--muted); opacity: 0.5; cursor: default; }
-  .pager button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-  .empty { color: var(--muted); padding: 20px 16px; text-align: center; }
-  footer { color: var(--muted); font-size: 0.85rem; margin-top: 28px; }
-  @media (max-width: 520px) {
-    th, td { padding: 9px 5px; font-size: 0.82rem; }
-    th:first-child, td:first-child { padding-left: 12px; }
-    th:last-child, td:last-child { padding-right: 12px; }
-    #statRangeCard { grid-column: 1 / -1; }
-  }
-  /* Printed on paper: black on white, every episode shown, no buttons. */
-  @media print {
-    :root { color-scheme: light; }
-    body { background: #fff; color: #000; font-size: 11pt; }
-    main { max-width: none; padding: 0; }
-    .ref, .label, .stat span, footer, th { color: #444; }
-    .card, .stat, .table-wrap { background: none; border: 1px solid #bbb; border-radius: 6px; }
-    .stat b { color: #000; }
-    th, td { border-bottom: 1px solid #ddd; padding: 5px 8px; }
-    .actions, .email, .pager, .howto { display: none !important; }
-    .print-only { display: block !important; }
-  }
-  .print-only { display: none; color: var(--muted); font-size: 0.85rem; margin: 6px 0 14px; }
-</style>
-</head>
-<body>
-<main>
-  <h1>Dog barking diary — Combine Street, Coffs Harbour</h1>
-  <p class="ref">Council ref 02503/27CR</p>
-  <p class="print-only" id="printNote"></p>
-
-  <div class="card">
-    <p>This diary is recorded automatically and updates within minutes of each barking episode. Each entry shows when the barking started and stopped, how long it lasted and how many barks were counted.</p>
-    <p style="margin:0" class="howto">Tap <strong>Email the council</strong> to open a ready-made email with the last 2 weeks of episodes. If the email that opens is missing the episode list, tap <strong>Copy email</strong> and paste it into your mail app instead.</p>
-  </div>
-
-  <div class="actions">
-    <a class="btn btn-primary" id="mailto" href="#">Email the council</a>
-    <button class="btn btn-secondary" type="button" id="copyAll">Copy email</button>
-    <a class="btn btn-secondary" href="bark-diary.csv" download="bark-diary.csv">Download CSV</a>
-  </div>
-
-  <div class="email">
-    <h2>Email text</h2>
-    <div class="card">
-      <div class="field">
-        <div class="field-head"><span class="label">To</span><button class="copy" data-target="emailTo">Copy</button></div>
-        <div class="value" id="emailTo"></div>
-      </div>
-      <div class="field">
-        <div class="field-head"><span class="label">Subject</span><button class="copy" data-target="emailSubject">Copy</button></div>
-        <div class="value" id="emailSubject"></div>
-      </div>
-      <div class="field">
-        <div class="field-head"><span class="label">Message</span><button class="copy" data-target="emailBody">Copy</button></div>
-        <div class="value" id="emailBody">Loading…</div>
-      </div>
-    </div>
-  </div>
-
-  <h2>Diary</h2>
-  <div class="stats" id="stats" hidden>
-    <div class="stat"><b id="statEpisodes">0</b><span>barking episodes</span></div>
-    <div class="stat"><b id="statBarks">0</b><span>barks counted</span></div>
-    <div class="stat" id="statRangeCard"><b id="statRange">—</b><span>period shown</span></div>
-  </div>
-  <div class="pager" id="pagerTop">
-    <button type="button" data-dir="1">&larr; Older</button>
-    <div class="period" id="period">Loading…</div>
-    <button type="button" data-dir="-1">Newer &rarr;</button>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Date</th><th>Start</th><th>End</th><th class="num">Length</th><th class="num">Barks</th></tr></thead>
-      <tbody id="rows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
-    </table>
-  </div>
-  <div class="pager" id="pagerBottom">
-    <button type="button" data-dir="1">&larr; Older</button>
-    <div class="period" id="periodBottom"></div>
-    <button type="button" data-dir="-1">Newer &rarr;</button>
-  </div>
-
-  <footer>An episode starts at the first bark and continues while barks are less than 3 minutes apart; it ends 1 minute after the last bark for each bark, up to 3 minutes (so a single bark is logged as 1 minute).</footer>
-</main>
-
-<script>
-  const TO = ["kyle.ketchell@chcc.nsw.gov.au", "coffs.council@chcc.nsw.gov.au"];
-  const SUBJECT = "02503/27CR - Combine Street Coffs Harbour dog barking complaint";
-  const CSV_URL = "https://bark-diary.vercel.app/bark-diary.csv";
-
-  // CSV dates look like "Oct 27 2026"; show them the Australian way, "27 Oct 2026".
-  function niceDate(csvDate) {
-    const [month, day, year] = csvDate.split(" ");
-    return day && year ? `${day} ${month.replace(".", "")} ${year}` : csvDate;
-  }
-
-  const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-  const PERIOD_DAYS = 14;
-  const DAY_MS = 86400000;
-
-  // Whole days since the epoch for a CSV date ("Oct. 29 2026"), using calendar dates so DST can't shift it.
-  function dayNumber(csvDate) {
-    const [month, day, year] = csvDate.split(" ");
-    const m = MONTHS.indexOf(month.slice(0, 3).toLowerCase());
-    return m < 0 ? NaN : Math.round(Date.UTC(Number(year), m, Number(day)) / DAY_MS);
-  }
-
-  function today() {
-    const n = new Date();
-    return Math.round(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) / DAY_MS);
-  }
-
-  function dayLabel(dayNum) {
-    const d = new Date(dayNum * DAY_MS);
-    return `${d.getUTCDate()} ${d.toLocaleString("en-AU", { month: "short", timeZone: "UTC" })} ${d.getUTCFullYear()}`;
-  }
-
-  // Period 0 is the 14 days ending today, period 1 the 14 days before that, and so on.
-  function periodBounds(index) {
-    const end = today() - index * PERIOD_DAYS;
-    return { start: end - PERIOD_DAYS + 1, end };
-  }
-
-  function inPeriod(episodes, index) {
-    const { start, end } = periodBounds(index);
-    return episodes.filter(e => { const d = dayNumber(e.date); return d >= start && d <= end; });
-  }
-
-  function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
-
-  function parseCsv(text) {
-    return text.trim().split(/\r?\n/).slice(1)
-      .map(line => line.split(","))
-      .filter(f => f.length === 5)
-      .map(([date, start, end, duration, barks]) => ({ date, start, end, duration, barks: Number(barks) || 0 }));
-  }
-
-  // Rows are newest first, so each day's list is newest first too.
-  function groupByDay(episodes) {
-    const byDay = new Map();
-    for (const e of episodes) {
-      const day = niceDate(e.date);
-      if (!byDay.has(day)) byDay.set(day, []);
-      byDay.get(day).push(e);
-    }
-    return byDay;
-  }
-
-  // Plain text, grouped by day, so it reads the same in any mail client (no columns to misalign).
-  function buildList(episodes) {
-    const lines = [];
-    for (const [day, list] of groupByDay(episodes)) {
-      const barks = list.reduce((sum, e) => sum + e.barks, 0);
-      lines.push(`${day} - ${plural(list.length, "episode", "episodes")}, ${plural(barks, "bark", "barks")}`);
-      for (const e of list) {
-        lines.push(`  ${e.start} to ${e.end} (${e.duration}, ${plural(e.barks, "bark", "barks")})`);
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Dog barking diary – Combine Street, Coffs Harbour</title>
+    <style>
+      :root {
+        --bg: #000000;
+        --card: #1c1c1e;
+        --line: #2c2c2e;
+        --text: #ffffff;
+        --muted: #8e8e93;
+        --blue: #0a84ff;
+        --green: #30d158;
+        color-scheme: dark;
       }
-      lines.push("");
-    }
-    return lines.join("\n");
-  }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+      }
+      h1 {
+        font-size: 1.75rem;
+        line-height: 1.2;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 0.75rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 600;
+        margin: 36px 0 10px;
+      }
+      .ref {
+        color: var(--muted);
+        margin: 0 0 20px;
+      }
+      .card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 16px;
+      }
+      p {
+        margin: 0 0 12px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 20px 0 0;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border-radius: 12px;
+        border: 0;
+        font: inherit;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        flex: 1 1 200px;
+      }
+      .btn-primary {
+        background: var(--blue);
+        color: #fff;
+      }
+      .btn-secondary {
+        background: var(--card);
+        color: var(--blue);
+      }
+      .btn.done {
+        color: var(--green);
+      }
+      .btn:focus-visible,
+      .copy:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 2px;
+      }
+      .field {
+        margin-bottom: 14px;
+      }
+      .field:last-child {
+        margin-bottom: 0;
+      }
+      .field-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .label {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      .copy {
+        background: none;
+        border: 0;
+        color: var(--blue);
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 4px 0;
+      }
+      .copy.done {
+        color: var(--green);
+      }
+      .value {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.95rem;
+      }
+      #emailBody {
+        max-height: 22rem;
+        overflow-y: auto;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+      }
+      .stat {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 14px 16px;
+      }
+      .stat b {
+        display: block;
+        font-size: 1.6rem;
+        color: var(--green);
+        line-height: 1.2;
+      }
+      .stat span {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        background: var(--card);
+        border-radius: 14px;
+        margin-top: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 0.8rem;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      td.num,
+      th.num {
+        text-align: right;
+      }
+      .pager {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 10px 0;
+      }
+      .pager .period {
+        text-align: center;
+        font-weight: 600;
+        flex: 1 1 auto;
+      }
+      .pager .period small {
+        display: block;
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 0.8rem;
+      }
+      .pager button {
+        background: var(--card);
+        color: var(--blue);
+        border: 0;
+        border-radius: 10px;
+        font: inherit;
+        font-weight: 600;
+        padding: 9px 14px;
+        cursor: pointer;
+      }
+      .pager button:disabled {
+        color: var(--muted);
+        opacity: 0.5;
+        cursor: default;
+      }
+      .pager button:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 2px;
+      }
+      .empty {
+        color: var(--muted);
+        padding: 20px 16px;
+        text-align: center;
+      }
+      footer {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-top: 28px;
+      }
+      @media (max-width: 520px) {
+        th,
+        td {
+          padding: 9px 5px;
+          font-size: 0.82rem;
+        }
+        th:first-child,
+        td:first-child {
+          padding-left: 12px;
+        }
+        th:last-child,
+        td:last-child {
+          padding-right: 12px;
+        }
+        #statRangeCard {
+          grid-column: 1 / -1;
+        }
+      }
+      /* Printed on paper: black on white, every episode shown, no buttons. */
+      @media print {
+        :root {
+          color-scheme: light;
+        }
+        body {
+          background: #fff;
+          color: #000;
+          font-size: 11pt;
+        }
+        main {
+          max-width: none;
+          padding: 0;
+        }
+        .ref,
+        .label,
+        .stat span,
+        footer,
+        th {
+          color: #444;
+        }
+        .card,
+        .stat,
+        .table-wrap {
+          background: none;
+          border: 1px solid #bbb;
+          border-radius: 6px;
+        }
+        .stat b {
+          color: #000;
+        }
+        th,
+        td {
+          border-bottom: 1px solid #ddd;
+          padding: 5px 8px;
+        }
+        .actions,
+        .email,
+        .pager,
+        .howto {
+          display: none !important;
+        }
+        .print-only {
+          display: block !important;
+        }
+      }
+      .print-only {
+        display: none;
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin: 6px 0 14px;
+      }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-E8JD4VPRYW"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-  function buildBody(episodes) {
-    // Only the last two weeks go in the email; the link below carries the full diary.
-    const { start, end } = periodBounds(0);
-    const window = `${dayLabel(start)} to ${dayLabel(end)}`;
-    const generated = dayLabel(today());
-    let summary;
-    if (episodes.length === 0) {
-      summary = `This extract was generated on ${generated}. No barking episodes were recorded from ${window}.`;
-    } else {
-      const barks = episodes.reduce((sum, e) => sum + e.barks, 0);
-      summary = `This extract was generated on ${generated} and covers the last two weeks (${window}). It shows:\n- ${plural(episodes.length, "barking episode", "barking episodes")}\n- ${plural(barks, "bark", "barks")} in total`;
-    }
-    return [
-      "Dear Ranger Ketchell,",
-      "",
-      "I'm writing about the ongoing dog barking on Combine Street, Coffs Harbour (complaint ref 02503/27CR).",
-      "",
-      `The barking is being logged automatically as it happens. ${summary}`,
-      "",
-      ...(episodes.length ? ["The episodes for this period, newest first:", "", buildList(episodes)] : []),
-      "The full log, including earlier weeks, is available at the link below:",
-      CSV_URL,
-      "",
-      "The barking is continuing to have a real impact on people living nearby. I'd appreciate it if Council could review the log and let me know what the next steps will be.",
-      "",
-      "Kind regards,",
-      "",
-      "[Your name]",
-      "[Your address]"
-    ].join("\n");
-  }
+      gtag("config", "G-E8JD4VPRYW");
+    </script>
+  </head>
+  <body>
+    <main>
+      <h1>Dog barking diary — Combine Street, Coffs Harbour</h1>
+      <p class="ref">Council ref 02503/27CR</p>
+      <p class="print-only" id="printNote"></p>
 
-  let allEpisodes = [];
-  let page = 0;
+      <div class="card">
+        <p>
+          This diary is recorded automatically and updates within minutes of
+          each barking episode. Each entry shows when the barking started and
+          stopped, how long it lasted and how many barks were counted.
+        </p>
+        <p style="margin: 0" class="howto">
+          Tap <strong>Email the council</strong> to open a ready-made email with
+          the last 2 weeks of episodes. If the email that opens is missing the
+          episode list, tap <strong>Copy email</strong> and paste it into your
+          mail app instead.
+        </p>
+      </div>
 
-  function renderEmail() {
-    const body = buildBody(inPeriod(allEpisodes, 0));
-    document.getElementById("emailTo").textContent = TO.join(", ");
-    document.getElementById("emailSubject").textContent = SUBJECT;
-    document.getElementById("emailBody").textContent = body;
-    document.getElementById("mailto").href =
-      `mailto:${TO.join(",")}?subject=${encodeURIComponent(SUBJECT)}&body=${encodeURIComponent(body.replace(/\n/g, "\r\n"))}`;
-  }
+      <div class="actions">
+        <a class="btn btn-primary" id="mailto" href="#">Email the council</a>
+        <button class="btn btn-secondary" type="button" id="copyAll">
+          Copy email
+        </button>
+        <a
+          class="btn btn-secondary"
+          href="bark-diary.csv"
+          download="bark-diary.csv"
+          >Download CSV</a
+        >
+      </div>
 
-  function cell(tr, value, i) {
-    const td = document.createElement("td");
-    td.textContent = value;
-    if (i >= 3) td.className = "num";
-    tr.appendChild(td);
-  }
+      <div class="email">
+        <h2>Email text</h2>
+        <div class="card">
+          <div class="field">
+            <div class="field-head">
+              <span class="label">To</span
+              ><button class="copy" data-target="emailTo">Copy</button>
+            </div>
+            <div class="value" id="emailTo"></div>
+          </div>
+          <div class="field">
+            <div class="field-head">
+              <span class="label">Subject</span
+              ><button class="copy" data-target="emailSubject">Copy</button>
+            </div>
+            <div class="value" id="emailSubject"></div>
+          </div>
+          <div class="field">
+            <div class="field-head">
+              <span class="label">Message</span
+              ><button class="copy" data-target="emailBody">Copy</button>
+            </div>
+            <div class="value" id="emailBody">Loading…</div>
+          </div>
+        </div>
+      </div>
 
-  function renderDiary() {
-    const days = allEpisodes.map(e => dayNumber(e.date)).filter(d => !isNaN(d));
-    const oldest = days.length ? Math.min(...days) : today();
-    const lastPage = Math.max(0, Math.floor((today() - oldest) / PERIOD_DAYS));
-    page = Math.min(Math.max(page, 0), lastPage);
+      <h2>Diary</h2>
+      <div class="stats" id="stats" hidden>
+        <div class="stat">
+          <b id="statEpisodes">0</b><span>barking episodes</span>
+        </div>
+        <div class="stat">
+          <b id="statBarks">0</b><span>barks counted</span>
+        </div>
+        <div class="stat" id="statRangeCard">
+          <b id="statRange">—</b><span>period shown</span>
+        </div>
+      </div>
+      <div class="pager" id="pagerTop">
+        <button type="button" data-dir="1">&larr; Older</button>
+        <div class="period" id="period">Loading…</div>
+        <button type="button" data-dir="-1">Newer &rarr;</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Start</th>
+              <th>End</th>
+              <th class="num">Length</th>
+              <th class="num">Barks</th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            <tr>
+              <td colspan="5" class="empty">Loading…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pager" id="pagerBottom">
+        <button type="button" data-dir="1">&larr; Older</button>
+        <div class="period" id="periodBottom"></div>
+        <button type="button" data-dir="-1">Newer &rarr;</button>
+      </div>
 
-    const episodes = inPeriod(allEpisodes, page);
-    const { start, end } = periodBounds(page);
-    const label = `${dayLabel(start)} – ${dayLabel(end)}`;
-    const caption = page === 0 ? "Last 2 weeks" : `${page * 2 + 2} to ${page * 2} weeks ago`;
-    for (const id of ["period", "periodBottom"]) {
-      document.getElementById(id).innerHTML = `${label}<small>${caption} · page ${page + 1} of ${lastPage + 1}</small>`;
-    }
-    for (const btn of document.querySelectorAll(".pager button")) {
-      btn.disabled = btn.dataset.dir === "1" ? page >= lastPage : page <= 0;
-    }
-    document.getElementById("printNote").textContent =
-      `Printed ${dayLabel(today())} — showing ${label}. The live diary is at ${location.origin}${location.pathname}`;
+      <footer>
+        An episode starts at the first bark and continues while barks are less
+        than 3 minutes apart; it ends 1 minute after the last bark for each
+        bark, up to 3 minutes (so a single bark is logged as 1 minute).
+      </footer>
+    </main>
 
-    const rows = document.getElementById("rows");
-    rows.replaceChildren();
-    if (episodes.length === 0) {
-      rows.innerHTML = '<tr><td colspan="5" class="empty">No barking episodes recorded in this period.</td></tr>';
-    }
-    for (const e of episodes) {
-      const tr = document.createElement("tr");
-      [niceDate(e.date), e.start, e.end, e.duration, String(e.barks)].forEach((v, i) => cell(tr, v, i));
-      rows.appendChild(tr);
-    }
-    document.getElementById("statEpisodes").textContent = episodes.length;
-    document.getElementById("statBarks").textContent = episodes.reduce((s, e) => s + e.barks, 0);
-    document.getElementById("statRange").textContent = label;
-    document.getElementById("statRange").style.fontSize = "1.05rem";
-    document.getElementById("stats").hidden = false;
-  }
+    <script>
+      const TO = [
+        "kyle.ketchell@chcc.nsw.gov.au",
+        "coffs.council@chcc.nsw.gov.au",
+      ];
+      const SUBJECT =
+        "02503/27CR - Combine Street Coffs Harbour dog barking complaint";
+      const CSV_URL = "https://bark-diary.vercel.app/bark-diary.csv";
 
-  function render(episodes) {
-    allEpisodes = episodes;
-    page = 0;
-    renderEmail();
-    renderDiary();
-  }
+      // CSV dates look like "Oct 27 2026"; show them the Australian way, "27 Oct 2026".
+      function niceDate(csvDate) {
+        const [month, day, year] = csvDate.split(" ");
+        return day && year
+          ? `${day} ${month.replace(".", "")} ${year}`
+          : csvDate;
+      }
 
-  document.querySelectorAll(".pager button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      page += Number(btn.dataset.dir);
-      renderDiary();
-      document.getElementById("pagerTop").scrollIntoView({ block: "start" });
-    });
-  });
+      const MONTHS = [
+        "jan",
+        "feb",
+        "mar",
+        "apr",
+        "may",
+        "jun",
+        "jul",
+        "aug",
+        "sep",
+        "oct",
+        "nov",
+        "dec",
+      ];
+      const PERIOD_DAYS = 14;
+      const DAY_MS = 86400000;
 
-  async function copyText(text, fallbackEl) {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const range = document.createRange();
-      range.selectNodeContents(fallbackEl);
-      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
-      document.execCommand("copy");
-    }
-  }
+      // Whole days since the epoch for a CSV date ("Oct. 29 2026"), using calendar dates so DST can't shift it.
+      function dayNumber(csvDate) {
+        const [month, day, year] = csvDate.split(" ");
+        const m = MONTHS.indexOf(month.slice(0, 3).toLowerCase());
+        return m < 0
+          ? NaN
+          : Math.round(Date.UTC(Number(year), m, Number(day)) / DAY_MS);
+      }
 
-  function flash(button, idle) {
-    button.textContent = "Copied";
-    button.classList.add("done");
-    setTimeout(() => { button.textContent = idle; button.classList.remove("done"); }, 1500);
-  }
+      function today() {
+        const n = new Date();
+        return Math.round(
+          Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) / DAY_MS,
+        );
+      }
 
-  document.querySelectorAll(".copy").forEach(button => {
-    button.addEventListener("click", async () => {
-      const el = document.getElementById(button.dataset.target);
-      await copyText(el.textContent, el);
-      flash(button, "Copy");
-    });
-  });
+      function dayLabel(dayNum) {
+        const d = new Date(dayNum * DAY_MS);
+        return `${d.getUTCDate()} ${d.toLocaleString("en-AU", { month: "short", timeZone: "UTC" })} ${d.getUTCFullYear()}`;
+      }
 
-  // Everything in one go, for pasting into a mail app when the button can't open a complete email.
-  document.getElementById("copyAll").addEventListener("click", async () => {
-    const text = `To: ${TO.join(", ")}\nSubject: ${SUBJECT}\n\n${document.getElementById("emailBody").textContent}`;
-    await copyText(text, document.getElementById("emailBody"));
-    flash(document.getElementById("copyAll"), "Copy email");
-  });
+      // Period 0 is the 14 days ending today, period 1 the 14 days before that, and so on.
+      function periodBounds(index) {
+        const end = today() - index * PERIOD_DAYS;
+        return { start: end - PERIOD_DAYS + 1, end };
+      }
 
-  // Cache-bust so a just-updated diary always shows.
-  fetch(`bark-diary.csv?t=${Date.now()}`, { cache: "no-store" })
-    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
-    .then(text => render(parseCsv(text)))
-    .catch(() => {
-      render([]);
-      document.getElementById("rows").innerHTML =
-        '<tr><td colspan="5" class="empty">The diary couldn\'t be loaded. Please refresh, or use Download CSV.</td></tr>';
-    });
-</script>
-</body>
+      function inPeriod(episodes, index) {
+        const { start, end } = periodBounds(index);
+        return episodes.filter((e) => {
+          const d = dayNumber(e.date);
+          return d >= start && d <= end;
+        });
+      }
+
+      function plural(n, one, many) {
+        return `${n} ${n === 1 ? one : many}`;
+      }
+
+      function parseCsv(text) {
+        return text
+          .trim()
+          .split(/\r?\n/)
+          .slice(1)
+          .map((line) => line.split(","))
+          .filter((f) => f.length === 5)
+          .map(([date, start, end, duration, barks]) => ({
+            date,
+            start,
+            end,
+            duration,
+            barks: Number(barks) || 0,
+          }));
+      }
+
+      // Rows are newest first, so each day's list is newest first too.
+      function groupByDay(episodes) {
+        const byDay = new Map();
+        for (const e of episodes) {
+          const day = niceDate(e.date);
+          if (!byDay.has(day)) byDay.set(day, []);
+          byDay.get(day).push(e);
+        }
+        return byDay;
+      }
+
+      // Plain text, grouped by day, so it reads the same in any mail client (no columns to misalign).
+      function buildList(episodes) {
+        const lines = [];
+        for (const [day, list] of groupByDay(episodes)) {
+          const barks = list.reduce((sum, e) => sum + e.barks, 0);
+          lines.push(
+            `${day} - ${plural(list.length, "episode", "episodes")}, ${plural(barks, "bark", "barks")}`,
+          );
+          for (const e of list) {
+            lines.push(
+              `  ${e.start} to ${e.end} (${e.duration}, ${plural(e.barks, "bark", "barks")})`,
+            );
+          }
+          lines.push("");
+        }
+        return lines.join("\n");
+      }
+
+      function buildBody(episodes) {
+        // Only the last two weeks go in the email; the link below carries the full diary.
+        const { start, end } = periodBounds(0);
+        const window = `${dayLabel(start)} to ${dayLabel(end)}`;
+        const generated = dayLabel(today());
+        let summary;
+        if (episodes.length === 0) {
+          summary = `This extract was generated on ${generated}. No barking episodes were recorded from ${window}.`;
+        } else {
+          const barks = episodes.reduce((sum, e) => sum + e.barks, 0);
+          summary = `This extract was generated on ${generated} and covers the last two weeks (${window}). It shows:\n- ${plural(episodes.length, "barking episode", "barking episodes")}\n- ${plural(barks, "bark", "barks")} in total`;
+        }
+        return [
+          "Dear Ranger Ketchell,",
+          "",
+          "I'm writing about the ongoing dog barking on Combine Street, Coffs Harbour (complaint ref 02503/27CR).",
+          "",
+          `The barking is being logged automatically as it happens. ${summary}`,
+          "",
+          ...(episodes.length
+            ? [
+                "The episodes for this period, newest first:",
+                "",
+                buildList(episodes),
+              ]
+            : []),
+          "The full log, including earlier weeks, is available at the link below:",
+          CSV_URL,
+          "",
+          "The barking is continuing to have a real impact on people living nearby. I'd appreciate it if Council could review the log and let me know what the next steps will be.",
+          "",
+          "Kind regards,",
+          "",
+          "[Your name]",
+          "[Your address]",
+        ].join("\n");
+      }
+
+      let allEpisodes = [];
+      let page = 0;
+
+      function renderEmail() {
+        const body = buildBody(inPeriod(allEpisodes, 0));
+        document.getElementById("emailTo").textContent = TO.join(", ");
+        document.getElementById("emailSubject").textContent = SUBJECT;
+        document.getElementById("emailBody").textContent = body;
+        document.getElementById("mailto").href =
+          `mailto:${TO.join(",")}?subject=${encodeURIComponent(SUBJECT)}&body=${encodeURIComponent(body.replace(/\n/g, "\r\n"))}`;
+      }
+
+      function cell(tr, value, i) {
+        const td = document.createElement("td");
+        td.textContent = value;
+        if (i >= 3) td.className = "num";
+        tr.appendChild(td);
+      }
+
+      function renderDiary() {
+        const days = allEpisodes
+          .map((e) => dayNumber(e.date))
+          .filter((d) => !isNaN(d));
+        const oldest = days.length ? Math.min(...days) : today();
+        const lastPage = Math.max(
+          0,
+          Math.floor((today() - oldest) / PERIOD_DAYS),
+        );
+        page = Math.min(Math.max(page, 0), lastPage);
+
+        const episodes = inPeriod(allEpisodes, page);
+        const { start, end } = periodBounds(page);
+        const label = `${dayLabel(start)} – ${dayLabel(end)}`;
+        const caption =
+          page === 0
+            ? "Last 2 weeks"
+            : `${page * 2 + 2} to ${page * 2} weeks ago`;
+        for (const id of ["period", "periodBottom"]) {
+          document.getElementById(id).innerHTML =
+            `${label}<small>${caption} · page ${page + 1} of ${lastPage + 1}</small>`;
+        }
+        for (const btn of document.querySelectorAll(".pager button")) {
+          btn.disabled = btn.dataset.dir === "1" ? page >= lastPage : page <= 0;
+        }
+        document.getElementById("printNote").textContent =
+          `Printed ${dayLabel(today())} — showing ${label}. The live diary is at ${location.origin}${location.pathname}`;
+
+        const rows = document.getElementById("rows");
+        rows.replaceChildren();
+        if (episodes.length === 0) {
+          rows.innerHTML =
+            '<tr><td colspan="5" class="empty">No barking episodes recorded in this period.</td></tr>';
+        }
+        for (const e of episodes) {
+          const tr = document.createElement("tr");
+          [
+            niceDate(e.date),
+            e.start,
+            e.end,
+            e.duration,
+            String(e.barks),
+          ].forEach((v, i) => cell(tr, v, i));
+          rows.appendChild(tr);
+        }
+        document.getElementById("statEpisodes").textContent = episodes.length;
+        document.getElementById("statBarks").textContent = episodes.reduce(
+          (s, e) => s + e.barks,
+          0,
+        );
+        document.getElementById("statRange").textContent = label;
+        document.getElementById("statRange").style.fontSize = "1.05rem";
+        document.getElementById("stats").hidden = false;
+      }
+
+      function render(episodes) {
+        allEpisodes = episodes;
+        page = 0;
+        renderEmail();
+        renderDiary();
+      }
+
+      document.querySelectorAll(".pager button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          page += Number(btn.dataset.dir);
+          renderDiary();
+          document
+            .getElementById("pagerTop")
+            .scrollIntoView({ block: "start" });
+        });
+      });
+
+      async function copyText(text, fallbackEl) {
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          const range = document.createRange();
+          range.selectNodeContents(fallbackEl);
+          const sel = getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          document.execCommand("copy");
+        }
+      }
+
+      function flash(button, idle) {
+        button.textContent = "Copied";
+        button.classList.add("done");
+        setTimeout(() => {
+          button.textContent = idle;
+          button.classList.remove("done");
+        }, 1500);
+      }
+
+      document.querySelectorAll(".copy").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const el = document.getElementById(button.dataset.target);
+          await copyText(el.textContent, el);
+          flash(button, "Copy");
+        });
+      });
+
+      // Everything in one go, for pasting into a mail app when the button can't open a complete email.
+      document.getElementById("copyAll").addEventListener("click", async () => {
+        const text = `To: ${TO.join(", ")}\nSubject: ${SUBJECT}\n\n${document.getElementById("emailBody").textContent}`;
+        await copyText(text, document.getElementById("emailBody"));
+        flash(document.getElementById("copyAll"), "Copy email");
+      });
+
+      // Cache-bust so a just-updated diary always shows.
+      fetch(`bark-diary.csv?t=${Date.now()}`, { cache: "no-store" })
+        .then((r) => {
+          if (!r.ok) throw new Error(r.status);
+          return r.text();
+        })
+        .then((text) => render(parseCsv(text)))
+        .catch(() => {
+          render([]);
+          document.getElementById("rows").innerHTML =
+            '<tr><td colspan="5" class="empty">The diary couldn\'t be loaded. Please refresh, or use Download CSV.</td></tr>';
+        });
+    </script>
+  </body>
 </html>
