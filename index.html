@@ -65,6 +65,15 @@
   th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
   tr:last-child td { border-bottom: 0; }
   td.num, th.num { text-align: right; }
+  .pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0; }
+  .pager .period { text-align: center; font-weight: 600; flex: 1 1 auto; }
+  .pager .period small { display: block; color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+  .pager button {
+    background: var(--card); color: var(--blue); border: 0; border-radius: 10px;
+    font: inherit; font-weight: 600; padding: 9px 14px; cursor: pointer;
+  }
+  .pager button:disabled { color: var(--muted); opacity: 0.5; cursor: default; }
+  .pager button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   .empty { color: var(--muted); padding: 20px 16px; text-align: center; }
   footer { color: var(--muted); font-size: 0.85rem; margin-top: 28px; }
   @media (max-width: 520px) {
@@ -110,13 +119,23 @@
   <div class="stats" id="stats" hidden>
     <div class="stat"><b id="statEpisodes">0</b><span>barking episodes</span></div>
     <div class="stat"><b id="statBarks">0</b><span>barks counted</span></div>
-    <div class="stat" id="statRangeCard"><b id="statRange">—</b><span>period covered</span></div>
+    <div class="stat" id="statRangeCard"><b id="statRange">—</b><span>period shown</span></div>
+  </div>
+  <div class="pager" id="pagerTop">
+    <button type="button" data-dir="1">&larr; Older</button>
+    <div class="period" id="period">Loading…</div>
+    <button type="button" data-dir="-1">Newer &rarr;</button>
   </div>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Date</th><th>Start</th><th>End</th><th class="num">Length</th><th class="num">Barks</th></tr></thead>
       <tbody id="rows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
     </table>
+  </div>
+  <div class="pager" id="pagerBottom">
+    <button type="button" data-dir="1">&larr; Older</button>
+    <div class="period" id="periodBottom"></div>
+    <button type="button" data-dir="-1">Newer &rarr;</button>
   </div>
 
   <footer>An episode starts at the first bark and continues while barks are less than 3 minutes apart; it ends 1 minute after the last bark for each bark, up to 3 minutes (so a single bark is logged as 1 minute).</footer>
@@ -130,7 +149,39 @@
   // CSV dates look like "Oct 27 2026"; show them the Australian way, "27 Oct 2026".
   function niceDate(csvDate) {
     const [month, day, year] = csvDate.split(" ");
-    return day && year ? `${day} ${month} ${year}` : csvDate;
+    return day && year ? `${day} ${month.replace(".", "")} ${year}` : csvDate;
+  }
+
+  const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  const PERIOD_DAYS = 14;
+  const DAY_MS = 86400000;
+
+  // Whole days since the epoch for a CSV date ("Oct. 29 2026"), using calendar dates so DST can't shift it.
+  function dayNumber(csvDate) {
+    const [month, day, year] = csvDate.split(" ");
+    const m = MONTHS.indexOf(month.slice(0, 3).toLowerCase());
+    return m < 0 ? NaN : Math.round(Date.UTC(Number(year), m, Number(day)) / DAY_MS);
+  }
+
+  function today() {
+    const n = new Date();
+    return Math.round(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) / DAY_MS);
+  }
+
+  function dayLabel(dayNum) {
+    const d = new Date(dayNum * DAY_MS);
+    return `${d.getUTCDate()} ${d.toLocaleString("en-AU", { month: "short", timeZone: "UTC" })} ${d.getUTCFullYear()}`;
+  }
+
+  // Period 0 is the 14 days ending today, period 1 the 14 days before that, and so on.
+  function periodBounds(index) {
+    const end = today() - index * PERIOD_DAYS;
+    return { start: end - PERIOD_DAYS + 1, end };
+  }
+
+  function inPeriod(episodes, index) {
+    const { start, end } = periodBounds(index);
+    return episodes.filter(e => { const d = dayNumber(e.date); return d >= start && d <= end; });
   }
 
   function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
@@ -143,16 +194,15 @@
   }
 
   function buildBody(episodes) {
+    // Only the last two weeks go in the email; the link below carries the full diary.
+    const { start, end } = periodBounds(0);
+    const window = `${dayLabel(start)} to ${dayLabel(end)}`;
     let summary;
     if (episodes.length === 0) {
-      summary = "No barking episodes have been recorded yet.";
+      summary = `No barking episodes were recorded from ${window}.`;
     } else {
-      // Rows are newest first.
-      const first = niceDate(episodes[episodes.length - 1].date);
-      const last = niceDate(episodes[0].date);
-      const range = first === last ? `on ${first}` : `between ${first} and ${last}`;
       const barks = episodes.reduce((sum, e) => sum + e.barks, 0);
-      summary = `As of today it shows:\n- ${plural(episodes.length, "barking episode", "barking episodes")} ${range}\n- ${plural(barks, "bark", "barks")} in total`;
+      summary = `For the last two weeks (${window}) it shows:\n- ${plural(episodes.length, "barking episode", "barking episodes")}\n- ${plural(barks, "bark", "barks")} in total`;
     }
     return [
       "Dear Ranger Ketchell,",
@@ -161,7 +211,7 @@
       "",
       `The barking is being logged as it happens and the diary is kept up to date. ${summary}`,
       "",
-      "Please find the full log — with the date, start and end time, duration and number of barks for each episode — at the link below:",
+      "Please find the full log — with the date, start and end time, duration and number of barks for each episode, including earlier weeks — at the link below:",
       CSV_URL,
       "",
       "The barking is continuing to have a real impact on people living nearby. I'd appreciate it if Council could review the log and let me know what the next steps will be.",
@@ -171,19 +221,39 @@
     ].join("\n");
   }
 
-  function render(episodes) {
-    const body = buildBody(episodes);
+  let allEpisodes = [];
+  let page = 0;
+
+  function renderEmail() {
+    const body = buildBody(inPeriod(allEpisodes, 0));
     document.getElementById("emailTo").textContent = TO.join(", ");
     document.getElementById("emailSubject").textContent = SUBJECT;
     document.getElementById("emailBody").textContent = body;
     document.getElementById("mailto").href =
       `mailto:${TO.join(",")}?subject=${encodeURIComponent(SUBJECT)}&body=${encodeURIComponent(body.replace(/\n/g, "\r\n"))}`;
+  }
+
+  function renderDiary() {
+    const days = allEpisodes.map(e => dayNumber(e.date)).filter(d => !isNaN(d));
+    const oldest = days.length ? Math.min(...days) : today();
+    const lastPage = Math.max(0, Math.floor((today() - oldest) / PERIOD_DAYS));
+    page = Math.min(Math.max(page, 0), lastPage);
+
+    const episodes = inPeriod(allEpisodes, page);
+    const { start, end } = periodBounds(page);
+    const label = `${dayLabel(start)} – ${dayLabel(end)}`;
+    const caption = page === 0 ? "Last 2 weeks" : `${page * 2 + 2} to ${page * 2} weeks ago`;
+    for (const id of ["period", "periodBottom"]) {
+      document.getElementById(id).innerHTML = `${label}<small>${caption} · page ${page + 1} of ${lastPage + 1}</small>`;
+    }
+    for (const btn of document.querySelectorAll(".pager button")) {
+      btn.disabled = btn.dataset.dir === "1" ? page >= lastPage : page <= 0;
+    }
 
     const rows = document.getElementById("rows");
     rows.replaceChildren();
     if (episodes.length === 0) {
-      rows.innerHTML = '<tr><td colspan="5" class="empty">No barking episodes recorded yet.</td></tr>';
-      return;
+      rows.innerHTML = '<tr><td colspan="5" class="empty">No barking episodes recorded in this period.</td></tr>';
     }
     for (const e of episodes) {
       const tr = document.createElement("tr");
@@ -195,14 +265,27 @@
       });
       rows.appendChild(tr);
     }
-    const first = niceDate(episodes[episodes.length - 1].date);
-    const last = niceDate(episodes[0].date);
     document.getElementById("statEpisodes").textContent = episodes.length;
     document.getElementById("statBarks").textContent = episodes.reduce((s, e) => s + e.barks, 0);
-    document.getElementById("statRange").textContent = first === last ? first : `${first} – ${last}`;
+    document.getElementById("statRange").textContent = label;
     document.getElementById("statRange").style.fontSize = "1.05rem";
     document.getElementById("stats").hidden = false;
   }
+
+  function render(episodes) {
+    allEpisodes = episodes;
+    page = 0;
+    renderEmail();
+    renderDiary();
+  }
+
+  document.querySelectorAll(".pager button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      page += Number(btn.dataset.dir);
+      renderDiary();
+      document.getElementById("pagerTop").scrollIntoView({ block: "start" });
+    });
+  });
 
   document.querySelectorAll(".copy").forEach(button => {
     button.addEventListener("click", async () => {
