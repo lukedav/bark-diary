@@ -728,5 +728,18 @@
             '<tr><td colspan="5" class="empty">The diary couldn\'t be loaded. Please refresh, or use Download CSV.</td></tr>';
         });
     </script>
+    <script>
+      document.addEventListener("click", (e) => {
+        const el = e.target.closest(".actions a, .actions button");
+        if (!el) return;
+
+        gtag("event", "actions_click", {
+          element_type: el.tagName.toLowerCase(), // 'a' or 'button'
+          element_text: el.textContent.trim().slice(0, 100),
+          element_id: el.id || undefined,
+          link_url: el.href || undefined,
+        });
+      });
+    </script>
   </body>
 </html>
