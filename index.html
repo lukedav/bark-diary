@@ -90,6 +90,10 @@
         background: var(--card);
         color: var(--blue);
       }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
       .btn.done {
         color: var(--green);
       }
@@ -227,6 +231,43 @@
         outline: 2px solid var(--blue);
         outline-offset: 2px;
       }
+      .filter {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .filter label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1 1 140px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      .filter input {
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        font: inherit;
+        padding: 8px 10px;
+        min-height: 42px;
+        width: 100%;
+      }
+      .filter input:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 1px;
+      }
+      .filter .btn {
+        flex: 1 1 180px;
+        padding: 10px 14px;
+      }
+      .filter .btn-secondary {
+        background: var(--bg);
+        flex: 0 1 auto;
+      }
       .empty {
         color: var(--muted);
         padding: 20px 16px;
@@ -293,6 +334,7 @@
         }
         .actions,
         .email,
+        .filter,
         .pager,
         .howto {
           display: none !important;
@@ -385,6 +427,16 @@
       </div>
 
       <h2>Diary</h2>
+      <div class="card filter" id="filter">
+        <label>From <input type="date" id="fromDate" /></label>
+        <label>To <input type="date" id="toDate" /></label>
+        <button class="btn btn-secondary" type="button" id="resetRange" hidden>
+          Last 2 weeks
+        </button>
+        <button class="btn btn-primary" type="button" id="downloadRange">
+          Download selected dates
+        </button>
+      </div>
       <div class="stats" id="stats" hidden>
         <div class="stat">
           <b id="statEpisodes">0</b><span>barking episodes</span>
@@ -493,8 +545,21 @@
         return { start: end - PERIOD_DAYS + 1, end };
       }
 
+      // Day number <-> the "YYYY-MM-DD" value a date input uses.
+      function isoDay(dayNum) {
+        return new Date(dayNum * DAY_MS).toISOString().slice(0, 10);
+      }
+
+      function fromIsoDay(value) {
+        const [y, m, d] = value.split("-").map(Number);
+        return value ? Math.round(Date.UTC(y, m - 1, d) / DAY_MS) : NaN;
+      }
+
       function inPeriod(episodes, index) {
-        const { start, end } = periodBounds(index);
+        return inRange(episodes, periodBounds(index));
+      }
+
+      function inRange(episodes, { start, end }) {
         return episodes.filter((e) => {
           const d = dayNumber(e.date);
           return d >= start && d <= end;
@@ -590,6 +655,19 @@
 
       let allEpisodes = [];
       let page = 0;
+      // A date range picked by the visitor; null means the 2-week pages are showing.
+      let range = null;
+
+      function oldestDay() {
+        const days = allEpisodes
+          .map((e) => dayNumber(e.date))
+          .filter((d) => !isNaN(d));
+        return days.length ? Math.min(...days) : today();
+      }
+
+      function shownBounds() {
+        return range ?? periodBounds(page);
+      }
 
       function renderEmail() {
         const body = buildBody(inPeriod(allEpisodes, 0));
@@ -608,30 +686,47 @@
       }
 
       function renderDiary() {
-        const days = allEpisodes
-          .map((e) => dayNumber(e.date))
-          .filter((d) => !isNaN(d));
-        const oldest = days.length ? Math.min(...days) : today();
+        const oldest = oldestDay();
         const lastPage = Math.max(
           0,
           Math.floor((today() - oldest) / PERIOD_DAYS),
         );
         page = Math.min(Math.max(page, 0), lastPage);
 
-        const episodes = inPeriod(allEpisodes, page);
-        const { start, end } = periodBounds(page);
-        const label = `${dayLabel(start)} – ${dayLabel(end)}`;
-        const caption =
-          page === 0
-            ? "Last 2 weeks"
-            : `${page * 2 + 2} to ${page * 2} weeks ago`;
+        const { start, end } = shownBounds();
+        const episodes = inRange(allEpisodes, { start, end });
+        const label =
+          start === end
+            ? dayLabel(start)
+            : `${dayLabel(start)} – ${dayLabel(end)}`;
+        const caption = range
+          ? `Selected dates · ${plural(end - start + 1, "day", "days")}`
+          : `${page === 0 ? "Last 2 weeks" : `${page * 2 + 2} to ${page * 2} weeks ago`} · page ${page + 1} of ${lastPage + 1}`;
         for (const id of ["period", "periodBottom"]) {
           document.getElementById(id).innerHTML =
-            `${label}<small>${caption} · page ${page + 1} of ${lastPage + 1}</small>`;
+            `${label}<small>${caption}</small>`;
         }
+        // Paging steps through 2-week blocks, which doesn't apply to a picked range.
         for (const btn of document.querySelectorAll(".pager button")) {
           btn.disabled = btn.dataset.dir === "1" ? page >= lastPage : page <= 0;
+          btn.style.visibility = range ? "hidden" : "";
         }
+
+        // The pickers always show what the table shows, so the download matches it.
+        const fromInput = document.getElementById("fromDate");
+        const toInput = document.getElementById("toDate");
+        for (const input of [fromInput, toInput]) {
+          input.min = isoDay(Math.min(oldest, start));
+          input.max = isoDay(today());
+        }
+        fromInput.value = isoDay(start);
+        toInput.value = isoDay(end);
+        document.getElementById("resetRange").hidden = !range;
+        const download = document.getElementById("downloadRange");
+        download.disabled = episodes.length === 0;
+        download.textContent = episodes.length
+          ? `Download selected dates (${plural(episodes.length, "episode", "episodes")})`
+          : "No episodes in these dates";
         document.getElementById("printNote").textContent =
           `Printed ${dayLabel(today())} — showing ${label}. The live diary is at ${location.origin}${location.pathname}`;
 
@@ -665,9 +760,57 @@
       function render(episodes) {
         allEpisodes = episodes;
         page = 0;
+        range = null;
         renderEmail();
         renderDiary();
       }
+
+      // Picking either date switches the table to a custom range; a reversed range is swapped round.
+      function pickRange() {
+        let start = fromIsoDay(document.getElementById("fromDate").value);
+        let end = fromIsoDay(document.getElementById("toDate").value);
+        if (isNaN(start)) start = oldestDay();
+        if (isNaN(end)) end = today();
+        if (start > end) [start, end] = [end, start];
+        range = { start, end };
+        renderDiary();
+      }
+
+      for (const id of ["fromDate", "toDate"]) {
+        document.getElementById(id).addEventListener("change", pickRange);
+      }
+
+      document.getElementById("resetRange").addEventListener("click", () => {
+        range = null;
+        page = 0;
+        renderDiary();
+      });
+
+      // Same columns as bark-diary.csv, limited to the dates in the pickers.
+      document.getElementById("downloadRange").addEventListener("click", () => {
+        const { start, end } = shownBounds();
+        const episodes = inRange(allEpisodes, { start, end });
+        const csv = [
+          "Date,Start,End,Duration,Barks",
+          ...episodes.map((e) =>
+            [e.date, e.start, e.end, e.duration, e.barks].join(","),
+          ),
+        ].join("\n");
+        const url = URL.createObjectURL(
+          new Blob([csv + "\n"], { type: "text/csv" }),
+        );
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `bark-diary_${isoDay(start)}_to_${isoDay(end)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        gtag("event", "actions_click", {
+          action_id: "downloadRange",
+          element_type: "button",
+        });
+      });
 
       document.querySelectorAll(".pager button").forEach((btn) => {
         btn.addEventListener("click", () => {
