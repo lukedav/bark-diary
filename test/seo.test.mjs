@@ -38,3 +38,47 @@ test("sitemap.xml lists the home page", () => {
 test("test files are not deployed", () => {
   assert.match(read(".vercelignore"), /^test\/?$/m);
 });
+
+test("html lang is Australian English", () => {
+  assert.match(html, /<html lang="en-AU">/);
+});
+
+test("title starts with the brand phrase", () => {
+  const title = html.match(/<title>([^<]*)<\/title>/)[1];
+  assert.ok(title.startsWith("Coffs Bark Diary"), `title was: ${title}`);
+  assert.ok(title.length <= 70, `title too long (${title.length})`);
+});
+
+test("meta description mentions the brand and the suburb", () => {
+  const d = attr('meta name="description"', "content");
+  assert.ok(d, "no meta description");
+  assert.match(d, /Coffs Bark Diary/);
+  assert.match(d, /Coffs Harbour/);
+  assert.ok(d.length >= 80 && d.length <= 160, `description length ${d.length}`);
+});
+
+test("canonical link points at the site root", () => {
+  const href = attr('link rel="canonical"', "href");
+  assert.match(href, /^https:\/\/[^/\s]+\/$/);
+});
+
+test("Open Graph title, description and url are set", () => {
+  assert.equal(attr('meta property="og:title"', "content"), "Coffs Bark Diary");
+  assert.ok(attr('meta property="og:description"', "content"));
+  assert.equal(attr('meta property="og:url"', "content"), attr('link rel="canonical"', "href"));
+  assert.equal(attr('meta property="og:type"', "content"), "website");
+});
+
+test("h1 is exactly the brand phrase", () => {
+  assert.match(body, /<h1>Coffs Bark Diary<\/h1>/);
+});
+
+test("the brand phrase appears naturally in the body text at least three times", () => {
+  const count = (body.match(/Coffs Bark Diary/g) || []).length;
+  assert.ok(count >= 3, `found ${count}`);
+});
+
+test("street and council reference are still on the page", () => {
+  assert.match(body, /Combine Street, Coffs Harbour/);
+  assert.match(body, /02503\/27CR/);
+});
