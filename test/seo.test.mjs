@@ -16,8 +16,8 @@ export function attr(tag, name) {
 }
 
 test("page is indexable: no noindex/nofollow robots meta", () => {
-  assert.doesNotMatch(head, /name="robots"[^>]*noindex/i);
-  assert.doesNotMatch(head, /name="robots"[^>]*nofollow/i);
+  assert.doesNotMatch(head, /name="(robots|googlebot)"[^>]*noindex/i);
+  assert.doesNotMatch(head, /name="(robots|googlebot)"[^>]*nofollow/i);
 });
 
 test("robots.txt allows everything and names the sitemap", () => {
@@ -67,6 +67,10 @@ test("Open Graph title, description and url are set", () => {
   assert.ok(attr('meta property="og:description"', "content"));
   assert.equal(attr('meta property="og:url"', "content"), attr('link rel="canonical"', "href"));
   assert.equal(attr('meta property="og:type"', "content"), "website");
+});
+
+test("Open Graph site name is the brand", () => {
+  assert.equal(attr('meta property="og:site_name"', "content"), "Coffs Bark Diary");
 });
 
 test("h1 is exactly the brand phrase", () => {
