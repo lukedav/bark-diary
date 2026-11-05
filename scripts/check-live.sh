@@ -17,5 +17,5 @@ check "title has brand phrase"     grep -q "<title>Coffs Bark Diary" <<<"$home"
 check "canonical matches origin"   grep -q "rel=\"canonical\" href=\"$origin/\"" <<<"$home"
 check "robots.txt is served"       bash -c 'curl -fsSL "$1/robots.txt" | grep -q "^Sitemap: $1/sitemap.xml"' _ "$origin"
 check "sitemap.xml is served"      bash -c 'curl -fsSL "$1/sitemap.xml" | grep -q "<loc>$1/</loc>"' _ "$origin"
-check "csv is served"              bash -c 'curl -fsSL "$1/bark-diary.csv" | head -1 | grep -q "^Date,Start,End,Duration,Barks"' _ "$origin"
+check "csv is served"              bash -c 'curl -fsSL "$1/bark-diary.csv" | sed -n 1p | grep -q "^Date,Start,End,Duration,Barks"' _ "$origin"
 exit $fail
