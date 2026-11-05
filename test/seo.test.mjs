@@ -82,3 +82,15 @@ test("street and council reference are still on the page", () => {
   assert.match(body, /Combine Street, Coffs Harbour/);
   assert.match(body, /02503\/27CR/);
 });
+
+test("JSON-LD describes the site with the brand name and canonical url", () => {
+  const m = head.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+  assert.ok(m, "no JSON-LD block");
+  const data = JSON.parse(m[1]);
+  assert.equal(data["@context"], "https://schema.org");
+  assert.equal(data["@type"], "WebSite");
+  assert.equal(data.name, "Coffs Bark Diary");
+  assert.deepEqual(data.alternateName, ["Bark Diary Coffs", "Coffs Barking Diary"]);
+  assert.equal(data.url, attr('link rel="canonical"', "href"));
+  assert.equal(data.inLanguage, "en-AU");
+});
