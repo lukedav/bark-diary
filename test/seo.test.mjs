@@ -94,3 +94,15 @@ test("JSON-LD describes the site with the brand name and canonical url", () => {
   assert.equal(data.url, attr('link rel="canonical"', "href"));
   assert.equal(data.inLanguage, "en-AU");
 });
+
+test("every absolute site URL uses the canonical origin", () => {
+  const origin = new URL(attr('link rel="canonical"', "href")).origin;
+  const csv = html.match(/const CSV_URL = "([^"]+)"/)[1];
+  assert.equal(new URL(csv).origin, origin, "CSV_URL origin");
+  assert.equal(csv, `${origin}/bark-diary.csv`);
+  assert.match(read("robots.txt"), new RegExp(`^Sitemap: ${origin}/sitemap\\.xml$`, "m"));
+  assert.match(read("sitemap.xml"), new RegExp(`<loc>${origin}/</loc>`));
+  assert.equal(attr('meta property="og:url"', "content"), `${origin}/`);
+  const ld = JSON.parse(head.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(ld.url, `${origin}/`);
+});
